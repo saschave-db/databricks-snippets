@@ -35,14 +35,20 @@ results = []
 
 for idx, t in enumerate(tables):
     print(
-        f"({idx+1}/{len(tables)}) Execute: VACUUM {t.table_catalog}.{t.table_schema}.{t.table_name} RETAIN {retain_days_wg*24} HOURS DRY RUN"
+        f"({idx+1}/{len(tables)}) EXECUTE: VACUUM {t.table_catalog}.{t.table_schema}.{t.table_name} RETAIN {retain_days_wg*24} HOURS DRY RUN"
     )
-    no_of_files = spark.sql(
-        f"VACUUM {t.table_catalog}.{t.table_schema}.{t.table_name} RETAIN {retain_days_wg*24} HOURS DRY RUN"
-    ).count()
-    print(
-        f"({idx+1}/{len(tables)}) {no_of_files} file(s) to vacuum"
-    )
+
+    no_of_files = 0
+    try:
+        no_of_files = spark.sql(
+            f"VACUUM {t.table_catalog}.{t.table_schema}.{t.table_name} RETAIN {retain_days_wg*24} HOURS DRY RUN"
+        ).count()
+        print(
+            f"({idx+1}/{len(tables)}) SUCCESS: {no_of_files} file(s) to vacuum"
+        )
+    except Exception as e:
+        print(f"({idx+1}/{len(tables)}) FAILED: {repr(e)}")
+    
     if no_of_files > 0:
       results.append([t.table_catalog, t.table_schema, t.table_name, t.table_owner, t.last_altered, no_of_files, datetime.datetime.now()])
 
